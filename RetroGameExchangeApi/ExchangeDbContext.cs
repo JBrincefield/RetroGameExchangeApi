@@ -9,5 +9,6 @@
 
         public DbSet<User> Users => Set<User>();
         public DbSet<Game> Games => Set<Game>();
+        public DbSet<TradeOffer> TradeOffers => Set<TradeOffer>();
     }
 }

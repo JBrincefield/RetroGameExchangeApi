@@ -1,0 +1,40 @@
+services:
+  api1:
+    build:
+      context: .
+      dockerfile: RetroGameExchangeApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - shared-data:/app/data
+    networks:
+      - backend
+
+  api2:
+    build:
+      context: .
+      dockerfile: RetroGameExchangeApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - shared-data:/app/data
+    networks:
+      - backend
+
+  nginx:
+    build: nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - api1
+      - api2
+    networks:
+      - backend
+
+volumes:
+  shared-data:
+
+networks:
+  backend:

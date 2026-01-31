@@ -17,14 +17,13 @@ namespace RetroGameExchangeApi
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<ExchangeDbContext>(options =>
-                options.UseSqlite("Data Source=exchange.db"));
+                options.UseSqlite("Data Source=/app/data/exchange.db"));
 
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<ExchangeDbContext>();
-                db.Database.EnsureCreated();
             }
 
             // Configure the HTTP request pipeline.
