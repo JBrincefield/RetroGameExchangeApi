@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RetroGameExchangeApi.Dtos;
+using RetroGameExchangeApi.Services;
 
 namespace RetroGameExchangeApi.Controllers
 {
@@ -8,10 +9,12 @@ namespace RetroGameExchangeApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ExchangeDbContext _db;
+        private readonly IEmailNotificationProducer _emailProducer;
 
-        public UsersController(ExchangeDbContext db)
+        public UsersController(ExchangeDbContext db, IEmailNotificationProducer emailProducer)
         {
             _db = db;
+            _emailProducer = emailProducer;
         }
 
         [HttpPost]
@@ -46,6 +49,43 @@ namespace RetroGameExchangeApi.Controllers
 
             _db.SaveChanges();
             return Ok(ToResponse(user));
+        }
+
+        [HttpPut("{id}/password")]
+        public async Task<IActionResult> UpdatePassword(int id, PasswordUpdateDto dto)
+        {
+            var user = _db.Users.Find(id);
+            if (user == null)
+                return NotFound();
+
+            user.Password = dto.NewPassword;
+            _db.SaveChanges();
+
+            await _emailProducer.SendPasswordChangedNotificationAsync(user);
+
+            return Ok(new { message = "Password updated successfully" });
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var user = _db.Users.Find(id);
+            if (user == null)
+                return NotFound();
+
+            // Remove user's games first
+            var userGames = _db.Games.Where(g => g.OwnerId == id);
+            _db.Games.RemoveRange(userGames);
+
+            // Remove trade offers involving user
+            var userOffers = _db.TradeOffers.Where(t => 
+                t.OfferedByUserId == id || t.RequestedFromUserId == id);
+            _db.TradeOffers.RemoveRange(userOffers);
+
+            _db.Users.Remove(user);
+            _db.SaveChanges();
+
+            return NoContent();
         }
 
         private object ToResponse(User user) => new
@@ -99,5 +139,4 @@ namespace RetroGameExchangeApi.Controllers
             return Ok(games);
         }
     }
-
 }

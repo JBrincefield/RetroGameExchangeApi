@@ -6,4 +6,5 @@ public class TradeOffer
     public int RequestedGameId { get; set; }
     public int RequestedFromUserId { get; set; }
     public string Status { get; set; } = "Pending";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
